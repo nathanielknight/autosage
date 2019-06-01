@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 mod deck;
-mod gamemodel;
+mod model;
 mod newgame;
 
 fn main() {

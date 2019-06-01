@@ -1,5 +1,5 @@
 /// Representation of the 52-card deck.
-use crate::gamemodel::{Card, Rank, Suit};
+use crate::model::{Card, Rank, Suit};
 
 const SUITS: [Suit; 4] = [Suit::Club, Suit::Diamond, Suit::Heart, Suit::Spade];
 const RANKS: [Rank; 13] = [
@@ -47,9 +47,7 @@ pub fn draw(deck: &mut Vec<Card>, cards: usize) -> Vec<Card> {
     for _ in 0..cards {
         let c = match deck.pop() {
             Some(c) => c,
-            None => {
-                panic!("Tried to overdraw while drawing {} cards", cards)
-            }
+            None => panic!("Tried to overdraw while drawing {} cards", cards),
         };
         hand.push(c);
     }

@@ -1,8 +1,7 @@
-use std::collections::HashMap;
 use std::collections::HashSet;
 
-use crate::gamemodel::*;
 use crate::deck;
+use crate::model::*;
 
 const PILE_SIZES: [(Position, usize); 9] = [
     (Position(RowId::Top, ColumnId::Left), 8),
@@ -27,21 +26,21 @@ fn test_pile_sizes() {
 
 impl Game {
     pub fn generate() -> Game {
-        let mut stacks = HashMap::new();
+        let mut spread = Spread::empty();
         let mut d = deck::new();
         deck::shuffle(&mut d);
         for (pos, cnt) in &PILE_SIZES {
             let hand = deck::draw(&mut d, *cnt);
-            stacks.insert(*pos, hand);
+            let stack: &mut Vec<_> = spread.get_stack_mut(*pos);
+            stack.extend(hand);
         }
         assert!(d.len() == 1);
         let bonus_card = d.pop().expect("Standard draw didn't leave a bonus card?");
         Game {
-            spread : stacks,
-            selected : HashSet::new(),
-            trashes : Trashes::Two,
-            bonus_card : bonus_card,
+            spread,
+            selected: HashSet::new(),
+            trashes: Trashes::Two,
+            bonus_card,
         }
-
     }
 }
