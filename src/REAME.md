@@ -1,9 +1,9 @@
 TODO:
 
-- Display remaining cards
 - Display bonus card
-- Update module
 - Get input
 - Game Loop
+- Update module
+- Display remaining cards
 
 - Detect full-house

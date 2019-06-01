@@ -64,11 +64,15 @@ impl fmt::Display for Hand {
 
 fn draw_move(mv: Move) {
     let msg = match mv {
-        Move::NewGame => "New Game".to_owned(),
         Move::Trash(_) => "Trash".to_owned(),
         Move::PlayHand(h) => format!("{}", h),
     };
     terminal::print_xy(3, 15, &msg);
+}
+
+fn draw_bonus(Card(r, s): Card) {
+    let msg = format!("Bonus suit: {}{}", r, s);
+    terminal::print_xy(3, 18, &msg);
 }
 
 pub fn draw_game(g: &Game) {
@@ -85,4 +89,7 @@ pub fn draw_game(g: &Game) {
     if let Some(mv) = g.selected_move() {
         draw_move(mv);
     }
+
+    draw_bonus(g.bonus_card);
+
 }

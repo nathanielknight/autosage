@@ -260,12 +260,13 @@ impl Hand {
 pub enum Msg {
     MakeMove,
     ToggleStack(Position),
+    NewGame,
+    Quit,
 }
 
 pub enum Move {
     Trash(Position),
     PlayHand(Hand),
-    NewGame,
 }
 
 // -------------------------------------------------
