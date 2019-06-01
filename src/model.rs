@@ -206,7 +206,7 @@ impl Spread {
 
 pub type Selection = HashSet<Position>;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Trashes {
     None,
     One,
@@ -386,6 +386,18 @@ impl Game {
         }
     }
 
+    pub fn restore_one_trash(&mut self) {
+        match self.trashes {
+            Trashes::Two => (),
+            Trashes::One => {
+                self.trashes = Trashes::Two;
+            }
+            Trashes::None => {
+                self.trashes = Trashes::One;
+            }
+        }
+    }
+
     fn selected_rows(&self) -> usize {
         let mut rs: HashSet<RowId> = HashSet::new();
         for Position(r, _) in self.selected.iter() {
@@ -400,6 +412,9 @@ impl Game {
             return None;
         }
         if scs.len() == 1 {
+            if self.trashes == Trashes::None {
+                return None
+            }
             assert_eq!(self.selected.len(), 1);
             let pos = self.selected.iter().next().unwrap();
             return Some(Move::Trash(*pos));

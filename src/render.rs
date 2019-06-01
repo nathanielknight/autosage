@@ -42,7 +42,7 @@ fn draw_stack(x: i32, y: i32, stack: &CardStack, selected: bool) {
         terminal::set_background(Color::from_rgb(100, 100, 100));
     }
     match stack.last() {
-        None => terminal::print_xy(x, y, &format!("{}|{}{}", 0, " ", " ")),
+        None => terminal::print_xy(x, y, &format!("[color=gray]{}|{}{}", 0, " ", " ")),
         Some(Card(rank, suit)) => terminal::print_xy(
             x,
             y,
@@ -82,6 +82,17 @@ fn draw_move(mv_opt: Option<Move>) {
 fn draw_bonus(Card(r, s): Card) {
     let msg = format!("Bonus suit: {}{}", r, s);
     terminal::print_xy(3, 18, &msg);
+}
+
+fn draw_trashes(t: &Trashes) {
+    let msg = match &t {
+        Trashes::None => "",
+        Trashes::One => "•",
+        Trashes::Two => "••",
+    };
+
+    terminal::print_xy(33, 3, &format!("Trashes:{}", msg));
+
 }
 
 pub fn draw_game(g: &Game) {
@@ -148,4 +159,5 @@ pub fn draw_game(g: &Game) {
 
     draw_move(g.selected_move());
     draw_bonus(g.bonus_card);
+    draw_trashes(&g.trashes);
 }

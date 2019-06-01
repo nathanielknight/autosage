@@ -8,23 +8,7 @@ mod newgame;
 mod render;
 mod update;
 
-fn parse_evt(evt_o: &Option<terminal::Event>) -> Option<model::Msg> {
-    if let Some(evt) = evt_o {
-        match evt {
-            terminal::Event::KeyPressed {
-                key: k,
-                ctrl: _,
-                shift: _,
-            } => Some(model::Msg::NewGame),
-            _ => None,
-        }
-    } else {
-        None
-    }
-}
-
 fn parse_msg(k: terminal::KeyCode) -> Option<model::Msg> {
-
     use model::*;
     use terminal::KeyCode;
     match k {
@@ -51,6 +35,7 @@ fn parse_msg(k: terminal::KeyCode) -> Option<model::Msg> {
         KeyCode::C | KeyCode::Num3 => {
             Some(Msg::ToggleStack(Position(RowId::Bottom, ColumnId::Right)))
         }
+        KeyCode::Space => Some(Msg::MakeMove),
         _ => None,
     }
 }
@@ -64,7 +49,6 @@ fn main() {
     terminal::refresh();
 
     loop {
-        dbg!(&g);
         let t_evt = match terminal::wait_event() {
             Some(e) => e,
             None => continue,
