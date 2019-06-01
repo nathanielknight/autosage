@@ -95,7 +95,7 @@ pub fn new_deck() -> Vec<Card> {
 #[test]
 fn test_deck_size() {
     let deck = new_deck();
-    assert!(deck.len() == 52);
+    assert_eq!(deck.len(), 52);
 }
 
 pub fn shuffle(deck: &mut Vec<Card>) {
@@ -124,8 +124,8 @@ fn test_drawing() {
         let mut deck = new_deck();
         let orig_len = deck.len();
         let hand = draw(&mut deck, handsize);
-        assert!(hand.len() == handsize);
-        assert!(hand.len() + deck.len() == orig_len);
+        assert_eq!(hand.len(), handsize);
+        assert_eq!(hand.len() + deck.len(), orig_len);
     }
 }
 
@@ -240,7 +240,7 @@ pub enum Hand {
     Pair,
     StraightThree,
     ThreeOfAKind,
-    FiveStraight,
+    StraightFive,
     FullHouse,
     Flush,
     FourOfAKind,
@@ -253,7 +253,7 @@ impl Hand {
             Hand::Pair => 1,
             Hand::StraightThree => 2,
             Hand::ThreeOfAKind => 3,
-            Hand::FiveStraight => 5,
+            Hand::StraightFive => 5,
             Hand::FullHouse => 7,
             Hand::Flush => 9,
             Hand::FourOfAKind => 10,
@@ -355,10 +355,13 @@ impl Game {
                 }
             }
             5 => {
-                if all_eq(self.selected_cards().iter().map(|Card(_, s)| s)) {
-                    Some(Hand::Flush)
-                } else {
-                    unimplemented!()
+                let straight = is_straight(&self.selected_cards());
+                let flush = all_eq(self.selected_cards().iter().map(|Card(_, s)| s));
+                match (straight, flush) {
+                    (true, true) => Some(Hand::StraightFlush),
+                    (true, false) => Some(Hand::StraightFive),
+                    (false, true) => Some(Hand::Flush),
+                    (false, false) => None,
                 }
             }
             _ => None,
@@ -560,7 +563,7 @@ mod test_game_logic {
             "One row can't be a three-of-a-kind"
         );
         g.select("tl tc ml");
-        assert!(g.selected_hand().unwrap() == Hand::ThreeOfAKind);
+        assert_eq!(g.selected_hand().unwrap(), Hand::ThreeOfAKind);
         g.select("tl tc mc");
         assert!(
             g.selected_hand().is_none(),
@@ -584,8 +587,62 @@ mod test_game_logic {
         g.select("tl tc tr");
         assert!(g.selected_hand().is_none(), "One row cant be a straight");
         g.select("tl tc ml");
-        assert!(g.selected_hand().unwrap() == Hand::StraightThree);
+        assert_eq!(g.selected_hand().unwrap(), Hand::StraightThree);
         g.select("tl tc mc");
         assert!(g.selected_hand().is_none(), "Can't wrap a straight");
+    }
+
+    #[test]
+    fn test_four_of_a_kind() {
+        let g = &mut Game::empty();
+        insert_card(g, "tl", "as");
+        insert_card(g, "tc", "ad");
+        insert_card(g, "tr", "ah");
+        insert_card(g, "ml", "ac");
+        insert_card(g, "mc", "2c");
+        g.select("tl tc tr ml");
+        assert_eq!(g.selected_hand().unwrap(), Hand::FourOfAKind);
+        g.select("tl tc tr mc");
+        assert!(g.selected_hand().is_none());
+    }
+
+    #[test]
+    fn test_straight() {
+        let g = &mut Game::empty();
+        insert_card(g, "tl", "ah");
+        insert_card(g, "tc", "2h");
+        insert_card(g, "tr", "3h");
+        insert_card(g, "ml", "4d");
+        insert_card(g, "mc", "5d");
+        insert_card(g, "mr", "ks");
+        g.select("tl tc tr ml mc");
+        assert_eq!(g.selected_hand().unwrap(), Hand::StraightFive);
+        g.select("tl tc tr ml mr");
+        assert!(g.selected_hand().is_none());
+    }
+
+    #[test]
+    fn test_straight_flush() {
+        let g = &mut Game::empty();
+        insert_card(g, "tl", "ah");
+        insert_card(g, "tc", "2h");
+        insert_card(g, "tr", "3h");
+        insert_card(g, "ml", "4h");
+        insert_card(g, "mc", "5h");
+        insert_card(g, "mr", "ks");
+        insert_card(g, "bl", "5d");
+
+        g.select("tl tc tr ml mc");
+        assert_eq!(g.selected_hand().unwrap(), Hand::StraightFlush);
+
+        g.select("tl tc tr ml mr");
+        assert!(g.selected_hand().is_none());
+
+        g.select("tl tc tr ml bl");
+        assert_eq!(
+            g.selected_hand().unwrap(),
+            Hand::StraightFive,
+            "Mixed suit means straight, not straight flush"
+        );
     }
 }
