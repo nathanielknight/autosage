@@ -35,7 +35,6 @@ fn test_deck_size() {
 }
 
 pub fn shuffle(deck: &mut Vec<Card>) {
-    use rand;
     use rand::seq::SliceRandom;
     let mut rng = rand::thread_rng();
     deck.shuffle(&mut rng);

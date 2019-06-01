@@ -99,7 +99,6 @@ fn test_deck_size() {
 }
 
 pub fn shuffle(deck: &mut Vec<Card>) {
-    use rand;
     use rand::seq::SliceRandom;
     let mut rng = rand::thread_rng();
     deck.shuffle(&mut rng);
@@ -151,15 +150,15 @@ pub struct Position(pub RowId, pub ColumnId);
 /// A board with cards on it
 #[derive(Debug)]
 pub struct Spread {
-    tl: CardStack,
-    tc: CardStack,
-    tr: CardStack,
-    ml: CardStack,
-    mc: CardStack,
-    mr: CardStack,
-    bl: CardStack,
-    bc: CardStack,
-    br: CardStack,
+    pub tl: CardStack,
+    pub tc: CardStack,
+    pub tr: CardStack,
+    pub ml: CardStack,
+    pub mc: CardStack,
+    pub mr: CardStack,
+    pub bl: CardStack,
+    pub bc: CardStack,
+    pub br: CardStack,
 }
 
 impl Spread {
@@ -231,10 +230,7 @@ impl Game {
     }
 }
 
-pub enum Msg {
-    MakeMove,
-    ToggleStack(Position),
-}
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Hand {
     Pair,
@@ -261,6 +257,18 @@ impl Hand {
         }
     }
 }
+
+pub enum Msg {
+    MakeMove,
+    ToggleStack(Position),
+}
+
+pub enum Move {
+    Trash(Position),
+    PlayHand,
+    NewGame,
+}
+
 
 // -------------------------------------------------
 // Predicates
@@ -367,12 +375,26 @@ impl Game {
             _ => None,
         }
     }
-    pub fn selected_rows(&self) -> usize {
+
+    fn selected_rows(&self) -> usize {
         let mut rs: HashSet<RowId> = HashSet::new();
         for Position(r, _) in self.selected.iter() {
             rs.insert(*r);
         }
         rs.len()
+    }
+
+    fn selected_move(&self) -> Option<Move> {
+        let scs = self.selected_cards();
+        if scs.len() == 0 {
+            return None;
+        }
+        if scs.len() == 1 {
+            assert_eq!(self.selected.len(), 1);
+            let pos = self.selected.iter().next().unwrap();
+            return Some(Move::Trash(*pos));
+        }
+        self.selected_hand().map(|_| Move::PlayHand)
     }
 }
 

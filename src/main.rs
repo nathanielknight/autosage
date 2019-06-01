@@ -3,12 +3,16 @@
 mod deck;
 mod model;
 mod newgame;
+mod render;
 
 fn main() {
     use bear_lib_terminal::terminal;
 
+    let g = model::Game::generate();
+
     terminal::open("Test", 80, 30);
-    terminal::print_xy(0, 0, "Hello from rust");
+
+    render::draw_game(&g);
     terminal::refresh();
 
     let _ = terminal::wait_event();
