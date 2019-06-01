@@ -18,7 +18,7 @@ fn test_suit_ranking() {
     assert!(Suit::Heart < Suit::Spade);
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Rank {
     Ace,
     Two,
@@ -35,7 +35,27 @@ pub enum Rank {
     King,
 }
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
+impl Rank {
+    fn successor(self) -> Rank {
+        match self {
+            Rank::Ace => Rank::Two,
+            Rank::Two => Rank::Three,
+            Rank::Three => Rank::Four,
+            Rank::Four => Rank::Five,
+            Rank::Five => Rank::Six,
+            Rank::Six => Rank::Seven,
+            Rank::Seven => Rank::Eight,
+            Rank::Eight => Rank::Nine,
+            Rank::Nine => Rank::Ten,
+            Rank::Ten => Rank::Jack,
+            Rank::Jack => Rank::Queen,
+            Rank::Queen => Rank::King,
+            Rank::King => Rank::Ace,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash)]
 pub struct Card(pub Rank, pub Suit);
 
 impl Card {
@@ -43,8 +63,8 @@ impl Card {
         Card(r, s)
     }
 }
-/// Representation of the 52-card deck.
 
+/// Representation of the 52-card deck.
 const SUITS: [Suit; 4] = [Suit::Club, Suit::Diamond, Suit::Heart, Suit::Spade];
 const RANKS: [Rank; 13] = [
     Rank::Ace,
@@ -206,7 +226,7 @@ impl Game {
     fn check_selection(&self) {
         for pos in &self.selected {
             let stack = self.spread.get_stack(*pos);
-            assert!(stack.len() > 0, "Empty stack selected");
+            assert!(!stack.is_empty(), "Empty stack selected");
         }
     }
 }
@@ -242,10 +262,15 @@ impl Hand {
     }
 }
 
+// -------------------------------------------------
+// Predicates
+
+// NB: Tests for predicates are in the test module below
+
 fn all_eq<I, X>(xs: I) -> bool
 where
-    X: std::cmp::Eq + std::fmt::Debug,
-    I: IntoIterator<Item = X> + std::fmt::Debug,
+    X: std::cmp::Eq,
+    I: IntoIterator<Item = X>,
 {
     let mut iter = xs.into_iter();
     let fst = match iter.next() {
@@ -255,21 +280,37 @@ where
     iter.all(|x| x == fst)
 }
 
-#[test]
-fn test_all_eq() {
-    let empty: Vec<u8> = vec![];
-    assert!(all_eq(&empty));
-    let one = vec![0];
-    assert!(all_eq(&one));
-    let two_match = vec![0, 0];
-    assert!(all_eq(&two_match));
-    let three_match = vec![1, 1, 1];
-    assert!(all_eq(&three_match));
-    let two_mismatch = vec![1, 0];
-    assert!(!all_eq(&two_mismatch));
-    let three_mismatch = vec![1, 1, 0];
-    assert!(!all_eq(&three_mismatch))
+fn is_straight(cards: &HashSet<Card>) -> bool {
+    let mut sorted_cards = {
+        let mut cs: Vec<_> = cards.iter().collect();
+        cs.sort();
+        cs
+    };
+    // Check specifically if the ace should be high
+    if sorted_cards.len() > 2 {
+        let Card(br, _) = sorted_cards[0];
+        let Card(tr, _) = sorted_cards.last().unwrap();
+        if *br == Rank::Ace && *tr == Rank::King {
+            let ace = sorted_cards.remove(0);
+            let Card(r, _) = ace;
+            assert!(*r == Rank::Ace);
+            sorted_cards.push(ace);
+        }
+    }
+    println!("checking {:?}", sorted_cards);
+    // Otherwise, check normally
+    for idx in 0..(sorted_cards.len() - 1) {
+        let Card(r1, _) = sorted_cards[idx];
+        let Card(r2, _) = sorted_cards[idx + 1];
+        if *r2 != r1.successor() {
+            return false;
+        }
+    }
+    true
 }
+
+// -----------------------------------
+// Hand detection
 
 impl Game {
     fn selected_cards(&self) -> HashSet<Card> {
@@ -295,8 +336,9 @@ impl Game {
                 } else {
                     None
                 }
-            },
-            3 => { //straight, 3oC
+            }
+            3 => {
+                //straight, 3oC
                 if all_eq(self.selected_cards().iter().map(|Card(r, _)| r)) {
                     Some(Hand::ThreeOfAKind)
                 } else {
@@ -317,7 +359,7 @@ impl Game {
                     unimplemented!()
                 }
             }
-            _ => None
+            _ => None,
         }
     }
     pub fn selected_rows(&self) -> usize {
@@ -364,6 +406,18 @@ mod test_game_logic {
         Card(r, s)
     }
 
+    macro_rules! cards {
+        ( $( $csrc:expr ),* ) => {
+            {
+                let mut cards = HashSet::new();
+                $(
+                    cards.insert(c($csrc));
+                )*
+                cards
+            }
+        }
+    }
+
     fn p(src: &str) -> Position {
         let mut chars = src.chars();
         let r = match chars.next().expect("need a row") {
@@ -404,6 +458,38 @@ mod test_game_logic {
                 self.selected.insert(*p);
             }
         }
+    }
+    // ----------------------------------------------------
+
+    // Predicate tests
+
+    #[test]
+    fn test_all_eq() {
+        let empty: Vec<u8> = vec![];
+        assert!(all_eq(&empty));
+        let one = vec![0];
+        assert!(all_eq(&one));
+        let two_match = vec![0, 0];
+        assert!(all_eq(&two_match));
+        let three_match = vec![1, 1, 1];
+        assert!(all_eq(&three_match));
+        let two_mismatch = vec![1, 0];
+        assert!(!all_eq(&two_mismatch));
+        let three_mismatch = vec![1, 1, 0];
+        assert!(!all_eq(&three_mismatch))
+    }
+
+    #[test]
+    fn test_is_straight() {
+        assert!(is_straight(&cards!("as", "2s", "3s")));
+        assert!(is_straight(&cards!("3s", "as", "2s")));
+        assert!(is_straight(&cards!("9d", "0c", "jh", "qs")));
+        assert!(is_straight(&cards!("jd", "qh", "ks", "ac")));
+    }
+    #[test]
+    fn test_is_not_straight() {
+        assert!(!is_straight(&cards!("as", "2s", "5s")));
+        assert!(!is_straight(&cards!("kd", "as", "2h")));
     }
 
     // ----------------------------------------------------
