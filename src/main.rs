@@ -36,6 +36,7 @@ fn parse_msg(k: terminal::KeyCode) -> Option<model::Msg> {
             Some(Msg::ToggleStack(Position(RowId::Bottom, ColumnId::Right)))
         }
         KeyCode::Space => Some(Msg::MakeMove),
+        KeyCode::P => Some(Msg::NewGame),
         _ => None,
     }
 }

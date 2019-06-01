@@ -28,7 +28,9 @@ pub fn update(msg: Msg, game: &mut Game) {
                 None => (),
             }
         }
-        Msg::NewGame => unimplemented!(),
+        Msg::NewGame => {
+            game.reset();
+        }
         Msg::ToggleStack(p) => {
             if game.selected.contains(&p) {
                 game.selected.remove(&p);

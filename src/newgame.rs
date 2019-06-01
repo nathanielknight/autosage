@@ -43,4 +43,20 @@ impl Game {
             bonus_card,
         }
     }
+
+    pub fn reset(&mut self) {
+        self.selected.clear();
+        self.spread = Spread::empty();
+        self.trashes = Trashes::Two;
+
+        let mut d = deck::new();
+        deck::shuffle(&mut d);
+        for (pos, cnt) in &PILE_SIZES {
+            let hand = deck::draw(&mut d, *cnt);
+            let stack: &mut Vec<_> = self.spread.get_stack_mut(*pos);
+            stack.extend(hand);
+        }
+        assert!(d.len() == 1);
+        self.bonus_card = d.pop().expect("Standard draw didn't leave a bonus card?");
+    }
 }
