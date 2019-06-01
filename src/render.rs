@@ -91,5 +91,4 @@ pub fn draw_game(g: &Game) {
     }
 
     draw_bonus(g.bonus_card);
-
 }

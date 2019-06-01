@@ -261,7 +261,6 @@ pub enum Msg {
     MakeMove,
     ToggleStack(Position),
     NewGame,
-    Quit,
 }
 
 pub enum Move {
@@ -372,6 +371,19 @@ impl Game {
                 }
             }
             _ => None,
+        }
+    }
+    pub fn spend_one_trash(&mut self) {
+        match self.trashes {
+            Trashes::Two => {
+                self.trashes = Trashes::One;
+            }
+            Trashes::One => {
+                self.trashes = Trashes::None;
+            }
+            Trashes::None => {
+                panic!("Tried to spend a trash when none were available");
+            }
         }
     }
 
