@@ -103,13 +103,13 @@ pub fn draw_game(g: &Game) {
         g.selected.contains(&Position(RowId::Top, ColumnId::Left)),
     );
     draw_stack(
-        12,
+        10,
         3,
         &g.spread.tc,
         g.selected.contains(&Position(RowId::Top, ColumnId::Center)),
     );
     draw_stack(
-        21,
+        17,
         3,
         &g.spread.tr,
         g.selected.contains(&Position(RowId::Top, ColumnId::Right)),
@@ -122,14 +122,14 @@ pub fn draw_game(g: &Game) {
             .contains(&Position(RowId::Middle, ColumnId::Left)),
     );
     draw_stack(
-        12,
+        10,
         6,
         &g.spread.mc,
         g.selected
             .contains(&Position(RowId::Middle, ColumnId::Center)),
     );
     draw_stack(
-        21,
+        17,
         6,
         &g.spread.mr,
         g.selected
@@ -143,14 +143,14 @@ pub fn draw_game(g: &Game) {
             .contains(&Position(RowId::Bottom, ColumnId::Left)),
     );
     draw_stack(
-        12,
+        10,
         9,
         &g.spread.bc,
         g.selected
             .contains(&Position(RowId::Bottom, ColumnId::Center)),
     );
     draw_stack(
-        21,
+        17,
         9,
         &g.spread.br,
         g.selected
