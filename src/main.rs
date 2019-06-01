@@ -24,7 +24,35 @@ fn parse_evt(evt_o: &Option<terminal::Event>) -> Option<model::Msg> {
 }
 
 fn parse_msg(k: terminal::KeyCode) -> Option<model::Msg> {
-    None
+
+    use model::*;
+    use terminal::KeyCode;
+    match k {
+        KeyCode::Q | KeyCode::Num7 => Some(Msg::ToggleStack(Position(RowId::Top, ColumnId::Left))),
+        KeyCode::W | KeyCode::Num8 => {
+            Some(Msg::ToggleStack(Position(RowId::Top, ColumnId::Center)))
+        }
+        KeyCode::E | KeyCode::Num9 => Some(Msg::ToggleStack(Position(RowId::Top, ColumnId::Right))),
+        KeyCode::A | KeyCode::Num4 => {
+            Some(Msg::ToggleStack(Position(RowId::Middle, ColumnId::Left)))
+        }
+        KeyCode::S | KeyCode::Num5 => {
+            Some(Msg::ToggleStack(Position(RowId::Middle, ColumnId::Center)))
+        }
+        KeyCode::D | KeyCode::Num6 => {
+            Some(Msg::ToggleStack(Position(RowId::Middle, ColumnId::Right)))
+        }
+        KeyCode::Z | KeyCode::Num1 => {
+            Some(Msg::ToggleStack(Position(RowId::Bottom, ColumnId::Left)))
+        }
+        KeyCode::X | KeyCode::Num2 => {
+            Some(Msg::ToggleStack(Position(RowId::Bottom, ColumnId::Center)))
+        }
+        KeyCode::C | KeyCode::Num3 => {
+            Some(Msg::ToggleStack(Position(RowId::Bottom, ColumnId::Right)))
+        }
+        _ => None,
+    }
 }
 
 fn main() {
@@ -36,6 +64,7 @@ fn main() {
     terminal::refresh();
 
     loop {
+        dbg!(&g);
         let t_evt = match terminal::wait_event() {
             Some(e) => e,
             None => continue,
@@ -54,6 +83,7 @@ fn main() {
             }
             _ => continue, // Ignore other messages
         }
+        terminal::clear(None);
         render::draw_game(&g);
         terminal::refresh();
     }

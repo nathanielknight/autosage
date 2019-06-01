@@ -1,6 +1,6 @@
 use std::fmt;
 
-use bear_lib_terminal::terminal;
+use bear_lib_terminal::{terminal, Color};
 
 use crate::model::*;
 
@@ -37,13 +37,20 @@ impl fmt::Display for Suit {
     }
 }
 
-fn draw_stack(x: i32, y: i32, stack: &CardStack) {
+fn draw_stack(x: i32, y: i32, stack: &CardStack, selected: bool) {
+    if selected {
+        terminal::set_background(Color::from_rgb(100, 100, 100));
+    }
     match stack.last() {
         None => terminal::print_xy(x, y, &format!("{}|{}{}", 0, " ", " ")),
-        Some(Card(rank, suit)) => {
-            terminal::print_xy(x, y, &format!("{}|{}{}", stack.len(), rank, suit,))
-        }
+        Some(Card(rank, suit)) => terminal::print_xy(
+            x,
+            y,
+            &format!("[color=gray]{}|[color=white]{}{}", stack.len(), rank, suit,),
+        ),
     }
+    //reset default bg color
+    terminal::set_background(Color::from_rgb(0, 0, 0));
 }
 
 impl fmt::Display for Hand {
@@ -62,12 +69,14 @@ impl fmt::Display for Hand {
     }
 }
 
-fn draw_move(mv: Move) {
-    let msg = match mv {
-        Move::Trash(_) => "Trash".to_owned(),
-        Move::PlayHand(h) => format!("{}", h),
-    };
-    terminal::print_xy(3, 15, &msg);
+fn draw_move(mv_opt: Option<Move>) {
+    if let Some(mv) = mv_opt {
+        let msg = match mv {
+            Move::Trash(_) => "Trash".to_owned(),
+            Move::PlayHand(h) => format!("{}", h),
+        };
+        terminal::print_xy(3, 15, &msg);
+    }
 }
 
 fn draw_bonus(Card(r, s): Card) {
@@ -76,19 +85,67 @@ fn draw_bonus(Card(r, s): Card) {
 }
 
 pub fn draw_game(g: &Game) {
-    draw_stack(3, 3, &g.spread.tl);
-    draw_stack(12, 3, &g.spread.tc);
-    draw_stack(21, 3, &g.spread.tr);
-    draw_stack(3, 6, &g.spread.ml);
-    draw_stack(12, 6, &g.spread.mc);
-    draw_stack(21, 6, &g.spread.mr);
-    draw_stack(3, 9, &g.spread.bl);
-    draw_stack(12, 9, &g.spread.bc);
-    draw_stack(21, 9, &g.spread.br);
+    draw_stack(
+        3,
+        3,
+        &g.spread.tl,
+        g.selected.contains(&Position(RowId::Top, ColumnId::Left)),
+    );
+    draw_stack(
+        12,
+        3,
+        &g.spread.tc,
+        g.selected.contains(&Position(RowId::Top, ColumnId::Center)),
+    );
+    draw_stack(
+        21,
+        3,
+        &g.spread.tr,
+        g.selected.contains(&Position(RowId::Top, ColumnId::Right)),
+    );
+    draw_stack(
+        3,
+        6,
+        &g.spread.ml,
+        g.selected
+            .contains(&Position(RowId::Middle, ColumnId::Left)),
+    );
+    draw_stack(
+        12,
+        6,
+        &g.spread.mc,
+        g.selected
+            .contains(&Position(RowId::Middle, ColumnId::Center)),
+    );
+    draw_stack(
+        21,
+        6,
+        &g.spread.mr,
+        g.selected
+            .contains(&Position(RowId::Middle, ColumnId::Right)),
+    );
+    draw_stack(
+        3,
+        9,
+        &g.spread.bl,
+        g.selected
+            .contains(&Position(RowId::Bottom, ColumnId::Left)),
+    );
+    draw_stack(
+        12,
+        9,
+        &g.spread.bc,
+        g.selected
+            .contains(&Position(RowId::Bottom, ColumnId::Center)),
+    );
+    draw_stack(
+        21,
+        9,
+        &g.spread.br,
+        g.selected
+            .contains(&Position(RowId::Bottom, ColumnId::Right)),
+    );
 
-    if let Some(mv) = g.selected_move() {
-        draw_move(mv);
-    }
-
+    draw_move(g.selected_move());
     draw_bonus(g.bonus_card);
 }

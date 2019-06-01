@@ -303,7 +303,6 @@ fn is_straight(cards: &HashSet<Card>) -> bool {
             sorted_cards.push(ace);
         }
     }
-    println!("checking {:?}", sorted_cards);
     // Otherwise, check normally
     for idx in 0..(sorted_cards.len() - 1) {
         let Card(r1, _) = sorted_cards[idx];
