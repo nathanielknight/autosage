@@ -230,7 +230,6 @@ impl Game {
     }
 }
 
-
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Hand {
     Pair,
@@ -265,10 +264,9 @@ pub enum Msg {
 
 pub enum Move {
     Trash(Position),
-    PlayHand,
+    PlayHand(Hand),
     NewGame,
 }
-
 
 // -------------------------------------------------
 // Predicates
@@ -384,7 +382,7 @@ impl Game {
         rs.len()
     }
 
-    fn selected_move(&self) -> Option<Move> {
+    pub fn selected_move(&self) -> Option<Move> {
         let scs = self.selected_cards();
         if scs.len() == 0 {
             return None;
@@ -394,7 +392,7 @@ impl Game {
             let pos = self.selected.iter().next().unwrap();
             return Some(Move::Trash(*pos));
         }
-        self.selected_hand().map(|_| Move::PlayHand)
+        self.selected_hand().map(|h| Move::PlayHand(h))
     }
 }
 

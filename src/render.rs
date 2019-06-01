@@ -4,7 +4,6 @@ use bear_lib_terminal::terminal;
 
 use crate::model::*;
 
-
 impl fmt::Display for Rank {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let c = match self {
@@ -36,7 +35,6 @@ impl fmt::Display for Suit {
         };
         write!(f, "{}", c)
     }
-
 }
 
 fn draw_stack(x: i32, y: i32, stack: &CardStack) {
@@ -48,8 +46,32 @@ fn draw_stack(x: i32, y: i32, stack: &CardStack) {
     }
 }
 
-pub fn draw_game(g: &Game) {
+impl fmt::Display for Hand {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let msg = match self {
+            Hand::Pair => "Pair",
+            Hand::ThreeOfAKind => "Three of a Kind",
+            Hand::StraightThree => "Three-Card Straight",
+            Hand::FourOfAKind => "Four of a Kind",
+            Hand::FullHouse => "Full House",
+            Hand::StraightFive => "Five-Card Straight",
+            Hand::Flush => "Flush",
+            Hand::StraightFlush => "Straight Flush!",
+        };
+        write!(f, "{}", msg)
+    }
+}
 
+fn draw_move(mv: Move) {
+    let msg = match mv {
+        Move::NewGame => "New Game".to_owned(),
+        Move::Trash(_) => "Trash".to_owned(),
+        Move::PlayHand(h) => format!("{}", h),
+    };
+    terminal::print_xy(3, 15, &msg);
+}
+
+pub fn draw_game(g: &Game) {
     draw_stack(3, 3, &g.spread.tl);
     draw_stack(12, 3, &g.spread.tc);
     draw_stack(21, 3, &g.spread.tr);
@@ -60,4 +82,7 @@ pub fn draw_game(g: &Game) {
     draw_stack(12, 9, &g.spread.bc);
     draw_stack(21, 9, &g.spread.br);
 
+    if let Some(mv) = g.selected_move() {
+        draw_move(mv);
+    }
 }
