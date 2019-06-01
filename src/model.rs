@@ -341,8 +341,10 @@ impl Game {
                 //straight, 3oC
                 if all_eq(self.selected_cards().iter().map(|Card(r, _)| r)) {
                     Some(Hand::ThreeOfAKind)
+                } else if is_straight(&self.selected_cards()) {
+                    Some(Hand::StraightThree)
                 } else {
-                    unimplemented!()
+                    None
                 }
             }
             4 => {
@@ -435,11 +437,9 @@ mod test_game_logic {
         Position(r, c)
     }
 
-    fn insert_cards(g: &mut Game, p: Position, cs: &[Card]) {
-        let s = g.spread.get_stack_mut(p);
-        for c in cs {
-            s.push(*c);
-        }
+    fn insert_card(g: &mut Game, p_src: &str, c_src: &str) {
+        let s = g.spread.get_stack_mut(p(p_src));
+        s.push(c(c_src));
     }
 
     impl Game {
@@ -452,10 +452,11 @@ mod test_game_logic {
             }
         }
 
-        fn select(&mut self, posns: &[Position]) {
+        fn select(&mut self, p_srcs: &str) {
+            let p_atoms = p_srcs.split(' ');
             self.selected.clear();
-            for p in posns {
-                self.selected.insert(*p);
+            for p_src in p_atoms {
+                self.selected.insert(p(p_src));
             }
         }
     }
@@ -520,7 +521,7 @@ mod test_game_logic {
     #[test]
     fn check_one_selected_card_has_no_hand() {
         let mut g = Game::empty();
-        insert_cards(&mut g, p("tl"), &[c("2s")]);
+        insert_card(&mut g, "tl", "2s");
         g.selected.insert(p("tl"));
         assert_eq!(g.selected.len(), 1);
         assert!(g.selected_hand().is_none());
@@ -529,15 +530,15 @@ mod test_game_logic {
     #[test]
     fn check_pairs() {
         let g = &mut Game::empty();
-        insert_cards(g, p("tl"), &[c("2s")]);
-        insert_cards(g, p("tr"), &[c("2c")]);
-        insert_cards(g, p("bl"), &[c("2h")]);
-        insert_cards(g, p("br"), &[c("3s")]);
-        g.select(&[p("tl"), p("tr")]);
+        insert_card(g, "tl", "2s");
+        insert_card(g, "tr", "2c");
+        insert_card(g, "bl", "2h");
+        insert_card(g, "br", "3s");
+        g.select("tl tr");
         assert!(g.selected_hand().is_none(), "Pair in same row is no hand");
-        g.select(&[p("tl"), p("br")]);
+        g.select("tl br");
         assert!(g.selected_hand().is_none(), "Not-equal cards are not pair");
-        g.select(&[p("tl"), p("bl")]);
+        g.select("tl bl");
         assert!(g.selected_hand().is_some());
         assert_eq!(
             g.selected_hand().expect("Expected to have selected a pair"),
@@ -545,4 +546,46 @@ mod test_game_logic {
         );
     }
 
+    #[test]
+    fn check_3_of_a_kind() {
+        let g = &mut Game::empty();
+        insert_card(g, "tl", "as");
+        insert_card(g, "tc", "ad");
+        insert_card(g, "tr", "ah");
+        insert_card(g, "ml", "ac");
+        insert_card(g, "mc", "2h");
+        g.select("tl tc tr");
+        assert!(
+            g.selected_hand().is_none(),
+            "One row can't be a three-of-a-kind"
+        );
+        g.select("tl tc ml");
+        assert!(g.selected_hand().unwrap() == Hand::ThreeOfAKind);
+        g.select("tl tc mc");
+        assert!(
+            g.selected_hand().is_none(),
+            "Three cards with a mach isn't a three-off-a-kind"
+        );
+        g.select("tl tc ml mc");
+        assert!(
+            g.selected_hand().is_none(),
+            "Four with three matches isn't a three-of-a-kind"
+        );
+    }
+
+    #[test]
+    fn test_small_straight() {
+        let g = &mut Game::empty();
+        insert_card(g, "tl", "as");
+        insert_card(g, "tc", "2s");
+        insert_card(g, "tr", "3s");
+        insert_card(g, "ml", "3c");
+        insert_card(g, "mc", "ks");
+        g.select("tl tc tr");
+        assert!(g.selected_hand().is_none(), "One row cant be a straight");
+        g.select("tl tc ml");
+        assert!(g.selected_hand().unwrap() == Hand::StraightThree);
+        g.select("tl tc mc");
+        assert!(g.selected_hand().is_none(), "Can't wrap a straight");
+    }
 }
