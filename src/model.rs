@@ -645,4 +645,18 @@ mod test_game_logic {
             "Mixed suit means straight, not straight flush"
         );
     }
+
+    #[test]
+    fn test_over_selection() {
+        let g = &mut Game::empty();
+        insert_card(g, "tl", "ah");
+        insert_card(g, "tc", "2h");
+        insert_card(g, "tr", "3h");
+        insert_card(g, "ml", "4h");
+        insert_card(g, "mc", "5h");
+        insert_card(g, "mr", "ks");
+        insert_card(g, "bl", "5d");
+        g.select("tl tr tc ml mr mc");
+        assert!(g.selected_hand().is_none());
+    }
 }
