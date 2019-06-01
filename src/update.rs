@@ -35,7 +35,10 @@ pub fn update(msg: Msg, game: &mut Game) {
             if game.selected.contains(&p) {
                 game.selected.remove(&p);
             } else {
-                game.selected.insert(p);
+                let s = game.spread.get_stack(p);
+                if !s.is_empty() {
+                    game.selected.insert(p);
+                }
             }
         }
     }
