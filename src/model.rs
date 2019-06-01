@@ -204,8 +204,6 @@ impl Spread {
     }
 }
 
-pub type Selection = HashSet<Position>;
-
 #[derive(Debug, PartialEq)]
 pub enum Trashes {
     None,
@@ -216,7 +214,7 @@ pub enum Trashes {
 #[derive(Debug)]
 pub struct Game {
     pub spread: Spread,
-    pub selected: Selection,
+    pub selected: HashSet<Position>,
     pub trashes: Trashes,
     pub bonus_card: Card,
 }
@@ -317,6 +315,18 @@ fn is_straight(cards: &HashSet<Card>) -> bool {
 // -----------------------------------
 // Hand detection
 
+fn check_fullhouse(cards: &HashSet<Card>) -> bool {
+    use std::collections::HashMap;
+    let mut ranks: HashMap<Rank, usize> = HashMap::new();
+    for Card(r, _) in cards.iter() {
+        let cnt = ranks.entry(*r).or_insert(0);
+        *cnt += 1;
+    }
+    let mut vals: Vec<usize> = ranks.values().map(|u| *u).collect();
+    vals.sort();
+    vals == vec![2, 3]
+}
+
 impl Game {
     fn selected_cards(&self) -> HashSet<Card> {
         let mut cards = HashSet::new();
@@ -360,6 +370,9 @@ impl Game {
                 }
             }
             5 => {
+                if check_fullhouse(&self.selected_cards()) {
+                    return Some(Hand::FullHouse);
+                }
                 let straight = is_straight(&self.selected_cards());
                 let flush = all_eq(self.selected_cards().iter().map(|Card(_, s)| s));
                 match (straight, flush) {
@@ -413,7 +426,7 @@ impl Game {
         }
         if scs.len() == 1 {
             if self.trashes == Trashes::None {
-                return None
+                return None;
             }
             assert_eq!(self.selected.len(), 1);
             let pos = self.selected.iter().next().unwrap();
@@ -691,6 +704,18 @@ mod test_game_logic {
             Hand::StraightFive,
             "Mixed suit means straight, not straight flush"
         );
+    }
+
+    #[test]
+    fn test_full_house() {
+        let g = &mut Game::empty();
+        insert_card(g, "tl", "as");
+        insert_card(g, "tc", "ac");
+        insert_card(g, "tr", "ad");
+        insert_card(g, "ml", "8s");
+        insert_card(g, "mc", "8d");
+        g.select("tl tc tr ml mc");
+        assert_eq!(g.selected_hand().unwrap(), Hand::FullHouse);
     }
 
     #[test]
