@@ -1,11 +1,12 @@
+use std::collections::HashSet;
 use std::fmt;
 
 use bear_lib_terminal::{terminal, Color};
 
 use crate::model::*;
 
-impl fmt::Display for Rank {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl Into<String> for Rank {
+    fn into(self) -> String {
         let c = match self {
             Rank::Ace => "A",
             Rank::Two => "2",
@@ -21,7 +22,15 @@ impl fmt::Display for Rank {
             Rank::Queen => "Q",
             Rank::King => "K",
         };
-        write!(f, "{: >2}", c)
+        c.to_owned()
+    }
+}
+
+impl fmt::Display for Rank {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let r = self.clone();
+        let s: String = r.into();
+        write!(f, "{: >2}", s)
     }
 }
 
@@ -92,7 +101,26 @@ fn draw_trashes(t: &Trashes) {
     };
 
     terminal::print_xy(33, 3, &format!("Trashes:{}", msg));
+}
 
+fn draw_remaining(rem_cards: &HashSet<Card>) {
+    const TOP: i32 = 6;
+    const LEFT: i32 = 33;
+    terminal::print_xy(LEFT, TOP, "   ♣♦♥♠");
+    let mut idx: usize = 1;
+    for &rank in &RANKS {
+        let cdhs = [
+            rem_cards.contains(&Card(rank, Suit::Club)),
+            rem_cards.contains(&Card(rank, Suit::Diamond)),
+            rem_cards.contains(&Card(rank, Suit::Heart)),
+            rem_cards.contains(&Card(rank, Suit::Spade)),
+        ];
+        let cdhs_s: String = cdhs.iter().map(|i| if *i { '•' } else { ' ' }).collect();
+        let rank_s: String = rank.into();
+        let row: String = format!("{: >2} {}", rank_s, cdhs_s);
+        terminal::print_xy(LEFT, TOP + idx as i32, &row);
+        idx += 1;
+    }
 }
 
 pub fn draw_game(g: &Game) {
@@ -160,4 +188,5 @@ pub fn draw_game(g: &Game) {
     draw_move(g.selected_move());
     draw_bonus(g.bonus_card);
     draw_trashes(&g.trashes);
+    draw_remaining(&g.remaining_cards());
 }

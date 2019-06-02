@@ -1,22 +1,5 @@
 /// Representation of the 52-card deck.
-use crate::model::{Card, Rank, Suit};
-
-const SUITS: [Suit; 4] = [Suit::Club, Suit::Diamond, Suit::Heart, Suit::Spade];
-const RANKS: [Rank; 13] = [
-    Rank::Ace,
-    Rank::Two,
-    Rank::Three,
-    Rank::Four,
-    Rank::Five,
-    Rank::Six,
-    Rank::Seven,
-    Rank::Eight,
-    Rank::Nine,
-    Rank::Ten,
-    Rank::Jack,
-    Rank::Queen,
-    Rank::King,
-];
+use crate::model::{Card, RANKS, SUITS};
 
 pub fn new() -> Vec<Card> {
     let mut deck = Vec::new();

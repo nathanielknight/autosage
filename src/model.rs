@@ -65,8 +65,8 @@ impl Card {
 }
 
 /// Representation of the 52-card deck.
-const SUITS: [Suit; 4] = [Suit::Club, Suit::Diamond, Suit::Heart, Suit::Spade];
-const RANKS: [Rank; 13] = [
+pub const SUITS: [Suit; 4] = [Suit::Club, Suit::Diamond, Suit::Heart, Suit::Spade];
+pub const RANKS: [Rank; 13] = [
     Rank::Ace,
     Rank::Two,
     Rank::Three,
@@ -385,6 +385,7 @@ impl Game {
             _ => None,
         }
     }
+
     pub fn spend_one_trash(&mut self) {
         match self.trashes {
             Trashes::Two => {
@@ -433,6 +434,25 @@ impl Game {
             return Some(Move::Trash(*pos));
         }
         self.selected_hand().map(|h| Move::PlayHand(h))
+    }
+
+    pub fn remaining_cards(&self) -> HashSet<Card> {
+        let mut cards = HashSet::new();
+        let mut add_stack = |st: &Vec<Card>| {
+            for c in st {
+                cards.insert(c.clone());
+            }
+        };
+        add_stack(&self.spread.tl);
+        add_stack(&self.spread.tc);
+        add_stack(&self.spread.tr);
+        add_stack(&self.spread.ml);
+        add_stack(&self.spread.mc);
+        add_stack(&self.spread.mr);
+        add_stack(&self.spread.bl);
+        add_stack(&self.spread.bc);
+        add_stack(&self.spread.br);
+        cards
     }
 }
 
