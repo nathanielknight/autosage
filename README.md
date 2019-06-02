@@ -1,9 +1,6 @@
 # Auto Sage
 
-A de-make
-of [Zach Gage][zg]'s
-[Sage Solitaire][sage]
-by [Nat Knight](https://twitter.com/scriptsimian)
+A de-make of [Zach Gage][zg]'s [Sage Solitaire][sage] by [Nat Knight](https://twitter.com/scriptsimian).
 
 Published with permission.
 
@@ -14,7 +11,7 @@ Published with permission.
 
 [Sage Solitaire][sage] is a card game by [Zach Game][zg] published on iPhone and Android. I've played it a bunch and enjoyed it immensely, but in order to improve, I'd need to be able to count cards effectively.
 
-My puny human brain balked at that idea, so I built this de-make that does the counting for me.
+My puny human brain balked at that idea, so I built this de-make that does the counting for me. I'm am still a deeply mediocre Sage Solitaire player, but now I can *feel* like a pretty good one.
 
 # Building
 
