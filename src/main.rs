@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use bear_lib_terminal::terminal;
 
 mod deck;
@@ -37,6 +35,10 @@ fn parse_msg(k: terminal::KeyCode) -> Option<model::Msg> {
         }
         KeyCode::Space => Some(Msg::MakeMove),
         KeyCode::P => Some(Msg::NewGame),
+        KeyCode::Escape => {
+            terminal::close();
+            None
+        }
         _ => None,
     }
 }
@@ -44,7 +46,10 @@ fn parse_msg(k: terminal::KeyCode) -> Option<model::Msg> {
 fn main() {
     let mut g = model::Game::generate();
 
-    terminal::open("Test", 80, 30);
+
+    terminal::open("Auto-Sage", 52, 27);
+    let win = terminal::config::Window::empty();
+    terminal::set(win.fullscreen(true));
 
     render::draw_game(&g);
     terminal::refresh();

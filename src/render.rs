@@ -46,17 +46,26 @@ impl fmt::Display for Suit {
     }
 }
 
+impl fmt::Display for Card {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let Card(r, s) = self;
+        let colo = match s {
+            Suit::Club => "70,224,53",
+            Suit::Diamond => "237,237,113",
+            Suit::Heart => "226,99,99",
+            Suit::Spade => "75,134,239",
+        };
+        write!(f, "[color={}]{: >2}{}[/color]", colo, r, s)
+    }
+}
+
 fn draw_stack(x: i32, y: i32, stack: &CardStack, selected: bool) {
     if selected {
-        terminal::set_background(Color::from_rgb(100, 100, 100));
+        terminal::set_background(Color::from_rgb(50, 50, 50));
     }
     match stack.last() {
-        None => terminal::print_xy(x, y, &format!("[color=gray]{}|{}{}", 0, " ", " ")),
-        Some(Card(rank, suit)) => terminal::print_xy(
-            x,
-            y,
-            &format!("[color=gray]{}|[color=white]{}{}", stack.len(), rank, suit,),
-        ),
+        None => terminal::print_xy(x, y, &format!("[color=gray]{}|   ", 0)),
+        Some(card) => terminal::print_xy(x, y, &format!("[color=gray]{}|{}", stack.len(), card)),
     }
     //reset default bg color
     terminal::set_background(Color::from_rgb(0, 0, 0));
@@ -88,9 +97,9 @@ fn draw_move(mv_opt: Option<Move>) {
     }
 }
 
-fn draw_bonus(Card(r, s): Card) {
-    let msg = format!("Bonus suit: {}{}", r, s);
-    terminal::print_xy(3, 18, &msg);
+fn draw_bonus(c: Card) {
+    let msg = format!("Bonus suit: {}", c);
+    terminal::print_xy(33, 6, &msg);
 }
 
 fn draw_trashes(t: &Trashes) {
@@ -104,9 +113,10 @@ fn draw_trashes(t: &Trashes) {
 }
 
 fn draw_remaining(rem_cards: &HashSet<Card>) {
-    const TOP: i32 = 6;
+    const TOP: i32 = 9;
     const LEFT: i32 = 33;
-    terminal::print_xy(LEFT, TOP, "   ♣♦♥♠");
+    terminal::print_xy(LEFT, TOP, "Remaining Cards:");
+    terminal::print_xy(LEFT, TOP + 2, "   ♣♦♥♠");
     let mut idx: usize = 1;
     for &rank in &RANKS {
         let cdhs = [
@@ -118,7 +128,7 @@ fn draw_remaining(rem_cards: &HashSet<Card>) {
         let cdhs_s: String = cdhs.iter().map(|i| if *i { '•' } else { ' ' }).collect();
         let rank_s: String = rank.into();
         let row: String = format!("{: >2} {}", rank_s, cdhs_s);
-        terminal::print_xy(LEFT, TOP + idx as i32, &row);
+        terminal::print_xy(LEFT, TOP + 2 + idx as i32, &row);
         idx += 1;
     }
 }

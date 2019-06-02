@@ -82,51 +82,6 @@ pub const RANKS: [Rank; 13] = [
     Rank::King,
 ];
 
-pub fn new_deck() -> Vec<Card> {
-    let mut deck = Vec::new();
-    for &r in RANKS.iter() {
-        for &s in SUITS.iter() {
-            deck.push(Card::new(r, s));
-        }
-    }
-    deck
-}
-
-#[test]
-fn test_deck_size() {
-    let deck = new_deck();
-    assert_eq!(deck.len(), 52);
-}
-
-pub fn shuffle(deck: &mut Vec<Card>) {
-    use rand::seq::SliceRandom;
-    let mut rng = rand::thread_rng();
-    deck.shuffle(&mut rng);
-}
-
-pub fn draw(deck: &mut Vec<Card>, cards: usize) -> Vec<Card> {
-    assert!(deck.len() >= cards, "Tried to overdraw");
-    let mut hand = Vec::new();
-    for _ in 0..cards {
-        let c = match deck.pop() {
-            Some(c) => c,
-            None => panic!("Tried to overdraw while drawing {} cards", cards),
-        };
-        hand.push(c);
-    }
-    hand
-}
-
-#[test]
-fn test_drawing() {
-    for handsize in 0..52 {
-        let mut deck = new_deck();
-        let orig_len = deck.len();
-        let hand = draw(&mut deck, handsize);
-        assert_eq!(hand.len(), handsize);
-        assert_eq!(hand.len() + deck.len(), orig_len);
-    }
-}
 
 pub type CardStack = Vec<Card>;
 
@@ -219,15 +174,6 @@ pub struct Game {
     pub bonus_card: Card,
 }
 
-impl Game {
-    fn check_selection(&self) {
-        for pos in &self.selected {
-            let stack = self.spread.get_stack(*pos);
-            assert!(!stack.is_empty(), "Empty stack selected");
-        }
-    }
-}
-
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Hand {
     Pair,
@@ -241,7 +187,7 @@ pub enum Hand {
 }
 
 impl Hand {
-    fn points(&self) -> u32 {
+    pub fn points(&self) -> u32 {
         match self {
             Hand::Pair => 1,
             Hand::StraightThree => 2,
