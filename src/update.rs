@@ -1,10 +1,5 @@
 use crate::model::*;
 
-fn pop_card_at(spread: &mut Spread, p: Position) {
-    let stack = spread.get_stack_mut(p);
-    stack.pop();
-}
-
 pub fn update(msg: Msg, game: &mut Game) {
     match msg {
         Msg::MakeMove => {
@@ -13,16 +8,11 @@ pub fn update(msg: Msg, game: &mut Game) {
                 Some(mv) => match mv {
                     Move::Trash(p) => {
                         game.spend_one_trash();
-                        pop_card_at(&mut game.spread, p);
+                        game.spread.get_stack_mut(p).pop();
                         game.selected.clear();
                     }
                     Move::PlayHand(h) => {
-                        assert!(game.selected_hand().unwrap() == h);
-                        for p in game.selected.iter() {
-                            pop_card_at(&mut game.spread, *p);
-                        }
-                        game.restore_one_trash();
-                        game.selected.clear();
+                        game.play_hand(h);
                     }
                 },
                 None => (),

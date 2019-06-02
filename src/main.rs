@@ -1,8 +1,6 @@
 use bear_lib_terminal::terminal;
 
-mod deck;
 mod model;
-mod newgame;
 mod render;
 mod update;
 

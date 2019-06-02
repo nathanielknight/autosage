@@ -1,6 +1,27 @@
 /// Raw representation of cards, stacks, the board, trashes, and the player's selection.
 use std::collections::HashSet;
 
+const PILE_SIZES: [(Position, usize); 9] = [
+    (Position(RowId::Top, ColumnId::Left), 8),
+    (Position(RowId::Top, ColumnId::Center), 8),
+    (Position(RowId::Top, ColumnId::Right), 8),
+    (Position(RowId::Middle, ColumnId::Left), 7),
+    (Position(RowId::Middle, ColumnId::Center), 6),
+    (Position(RowId::Middle, ColumnId::Right), 5),
+    (Position(RowId::Bottom, ColumnId::Left), 4),
+    (Position(RowId::Bottom, ColumnId::Center), 3),
+    (Position(RowId::Bottom, ColumnId::Right), 2),
+];
+
+#[test]
+fn test_pile_sizes() {
+    let mut total = 0;
+    for (_, size) in &PILE_SIZES {
+        total += size;
+    }
+    assert!(total == 51);
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Suit {
     Club,
@@ -82,7 +103,6 @@ pub const RANKS: [Rank; 13] = [
     Rank::King,
 ];
 
-
 pub type CardStack = Vec<Card>;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
@@ -90,6 +110,16 @@ pub enum RowId {
     Top,
     Middle,
     Bottom,
+}
+
+impl RowId {
+    pub fn bonus(&self) ->u32 {
+        match self {
+            RowId::Top => 15,
+            RowId::Middle => 10,
+            RowId::Bottom => 5,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
@@ -172,6 +202,7 @@ pub struct Game {
     pub selected: HashSet<Position>,
     pub trashes: Trashes,
     pub bonus_card: Card,
+    hand_score: u32,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -274,6 +305,45 @@ fn check_fullhouse(cards: &HashSet<Card>) -> bool {
 }
 
 impl Game {
+    // ----------------------------------------------------
+    // Generation
+    pub fn generate() -> Game {
+        let mut spread = Spread::empty();
+        let mut d = new_deck();
+        shuffle(&mut d);
+        for (pos, cnt) in &PILE_SIZES {
+            let hand = draw(&mut d, *cnt);
+            let stack: &mut Vec<_> = spread.get_stack_mut(*pos);
+            stack.extend(hand);
+        }
+        assert!(d.len() == 1);
+        let bonus_card = d.pop().expect("Standard draw didn't leave a bonus card?");
+        Game {
+            spread,
+            selected: HashSet::new(),
+            trashes: Trashes::Two,
+            bonus_card,
+            hand_score: 0,
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.selected.clear();
+        self.spread = Spread::empty();
+        self.trashes = Trashes::Two;
+        self.hand_score = 0;
+
+        let mut d = new_deck();
+        shuffle(&mut d);
+        for (pos, cnt) in &PILE_SIZES {
+            let hand = draw(&mut d, *cnt);
+            let stack: &mut Vec<_> = self.spread.get_stack_mut(*pos);
+            stack.extend(hand);
+        }
+        assert!(d.len() == 1);
+        self.bonus_card = d.pop().expect("Standard draw didn't leave a bonus card?");
+    }
+
     fn selected_cards(&self) -> HashSet<Card> {
         let mut cards = HashSet::new();
         for p in self.selected.iter() {
@@ -400,6 +470,45 @@ impl Game {
         add_stack(&self.spread.br);
         cards
     }
+
+    pub fn play_hand(&mut self, h: Hand) {
+        assert!(self.selected_hand().unwrap() == h);
+        self.score_hand(h);
+        for &p in self.selected.iter() {
+            let stack = self.spread.get_stack_mut(p);
+            stack.pop();
+        }
+        self.restore_one_trash();
+        self.selected.clear();
+    }
+
+    fn score_hand(&mut self, h: Hand) {
+        let base_points = h.points();
+        let Card(_, bonus_suit) = self.bonus_card;
+        let multiplier = if self
+            .selected_cards()
+            .iter()
+            .any(|Card(_, s)| *s == bonus_suit)
+        {
+            2
+        } else {
+            1
+        };
+        self.hand_score += multiplier * base_points;
+    }
+
+    pub fn score(&self) -> u32 {
+        let mut pile_bonus: u32 = 0;
+        for rowid in &[RowId::Top, RowId::Middle, RowId::Bottom] {
+            let bonus = rowid.bonus();
+            for colid in &[ColumnId::Left, ColumnId::Center, ColumnId::Right] {
+                if self.spread.get_stack(Position(*rowid, *colid)).is_empty() {
+                    pile_bonus += bonus;
+                }
+            }
+        }
+        self.hand_score + pile_bonus
+    }
 }
 
 #[cfg(test)]
@@ -489,8 +598,8 @@ mod test_game_logic {
             }
         }
     }
-    // ----------------------------------------------------
 
+    // ----------------------------------------------------
     // Predicate tests
 
     #[test]
@@ -696,5 +805,52 @@ mod test_game_logic {
         insert_card(g, "bl", "5d");
         g.select("tl tr tc ml mr mc");
         assert!(g.selected_hand().is_none());
+    }
+}
+
+
+fn new_deck() -> Vec<Card> {
+    let mut deck = Vec::new();
+    for &r in RANKS.iter() {
+        for &s in SUITS.iter() {
+            deck.push(Card::new(r, s));
+        }
+    }
+    deck
+}
+
+#[test]
+fn test_deck_size() {
+    let deck = new_deck();
+    assert!(deck.len() == 52);
+}
+
+fn shuffle(deck: &mut Vec<Card>) {
+    use rand::seq::SliceRandom;
+    let mut rng = rand::thread_rng();
+    deck.shuffle(&mut rng);
+}
+
+fn draw(deck: &mut Vec<Card>, cards: usize) -> Vec<Card> {
+    assert!(deck.len() >= cards, "Tried to overdraw");
+    let mut hand = Vec::new();
+    for _ in 0..cards {
+        let c = match deck.pop() {
+            Some(c) => c,
+            None => panic!("Tried to overdraw while drawing {} cards", cards),
+        };
+        hand.push(c);
+    }
+    hand
+}
+
+#[test]
+fn test_drawing() {
+    for handsize in 0..52 {
+        let mut deck = new_deck();
+        let orig_len = deck.len();
+        let hand = draw(&mut deck, handsize);
+        assert!(hand.len() == handsize);
+        assert!(hand.len() + deck.len() == orig_len);
     }
 }
