@@ -39,17 +39,46 @@ fn parse_msg(k: terminal::KeyCode) -> Option<model::Msg> {
             terminal::close();
             None
         }
+        KeyCode::H => {
+            render_help();
+            None
+        }
         _ => None,
     }
+}
+
+fn render_help() {
+    terminal::clear(None);
+    let msg = r#"
+    Auto Sage
+    written by Nathaniel Knight
+    nathanielknight.ca
+
+    Based on Sage Solitaire by Zach Gage
+    sagesolitaire.com
+
+    Select cards with       Play move with
+    Q W E                   SPC
+    A S D
+    Z X C
+
+    Quit with               New Game
+    Esc                     P
+
+    Press any key to return
+
+    Built with the BearLibTerminal Library
+    http://foo.wyrd.name/en:bearlibterminal
+    "#;
+    terminal::print_xy(3, 3, msg);
+    terminal::refresh();
+    terminal::wait_event();
 }
 
 fn main() {
     let mut g = model::Game::generate();
 
-
     terminal::open("Auto-Sage", 52, 27);
-    let win = terminal::config::Window::empty();
-    terminal::set(win.fullscreen(true));
 
     render::draw_game(&g);
     terminal::refresh();
