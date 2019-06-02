@@ -51,15 +51,10 @@ fn render_help() {
     terminal::clear(None);
     let msg = r#"
     Auto Sage
-    written by Nathaniel Knight
-    nathanielknight.ca
-
-    Based on Sage Solitaire by Zach Gage
-    sagesolitaire.com
 
     Select cards with       Play move with
     Q W E                   SPC
-    A S D
+    A S D  or NumPad
     Z X C
 
     Quit with               New Game
@@ -67,7 +62,13 @@ fn render_help() {
 
     Press any key to return
 
-    Built with the BearLibTerminal Library
+    Based on Sage Solitaire by Zach Gage
+    sagesolitaire.com
+
+    written by Nathaniel Knight
+    nathanielknight.ca
+
+    Built with BearLibTerminal
     http://foo.wyrd.name/en:bearlibterminal
     "#;
     terminal::print_xy(3, 3, msg);

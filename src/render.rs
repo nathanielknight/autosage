@@ -133,6 +133,10 @@ fn draw_remaining(rem_cards: &HashSet<Card>) {
     }
 }
 
+fn draw_help_msg() {
+    terminal::print_xy(3, 24, "Press 'H' for help");
+}
+
 pub fn draw_game(g: &Game) {
     draw_stack(
         3,
@@ -199,4 +203,5 @@ pub fn draw_game(g: &Game) {
     draw_bonus(g.bonus_card);
     draw_trashes(&g.trashes);
     draw_remaining(&g.remaining_cards());
+    draw_help_msg();
 }
